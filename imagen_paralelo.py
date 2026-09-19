@@ -20,7 +20,7 @@ def convertir_a_gris(ruta_imagen):
         print(f"Error al procesar {ruta_imagen}: {e}")
 
 def procesar_imagenes(lista_imagenes, inicio, fin):
-    """Procesa una lista de imágenes paralelamente."""
+    """Procesa una lista de imágenes."""
     lista_porcion = lista_imagenes[inicio:fin]
 
     for ruta_imagen in lista_porcion:
