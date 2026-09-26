@@ -1,50 +1,79 @@
 import multiprocessing
 import time
 
+
+CHUNK_SIZE = 50000
+
+def verification(lista, chunk_size):
+    if(len(lista) >= chunk_size):
+        return True
+    else:
+        return False
+
 def readFile(input ,colaTextoLeido):
     try:
         with open(input, 'r') as file:
-            texto = file.read()
-            texto_en_lineas = texto.splitlines()
 
-            for linea in texto_en_lineas:
-                colaTextoLeido.put(linea)
+            listaTemporal = list()
+
+            for linea in file:
+                listaTemporal.append(linea)
+                if verification(listaTemporal, CHUNK_SIZE):
+                    colaTextoLeido.put(listaTemporal)
+                    listaTemporal = list()
+                    
+            if len(listaTemporal) != 0:
+                colaTextoLeido.put(listaTemporal)
+                listaTemporal = list()
             colaTextoLeido.put(None)
     except FileNotFoundError: 
         print("Error: No se encontró el archivo texto_entrada")
+        colaTextoLeido.put(None)
 
 def cleanLines(colaTextoLeido, colaTextoLimpiado):
+    
     while(True):
-        linea_leida = colaTextoLeido.get()
-        if(linea_leida == None):
+        listaTemporal = list()
+
+        listaEntrada = colaTextoLeido.get()
+        if(listaEntrada == None):
             colaTextoLimpiado.put(None)
             break
         else:
-            colaTextoLimpiado.put(linea_leida.strip())
+            for linea_leida in listaEntrada:
+                listaTemporal.append(linea_leida.strip())
+            colaTextoLimpiado.put(listaTemporal)
+            
         
 
 
 def toUpper(colaTextoLimpiado, colaTextoEnMayusculas):
-
+    
+    
     while(True):
-        linea_limpia = colaTextoLimpiado.get()
+        listaTemporal = list()
+        listaEntrada = colaTextoLimpiado.get()
 
-        if(linea_limpia == None):
+        if(listaEntrada == None):
             colaTextoEnMayusculas.put(None)
             break
         else:
-            colaTextoEnMayusculas.put(linea_limpia.upper())
+            for linea_limpia in listaEntrada:
+                listaTemporal.append(linea_limpia.upper())
+            colaTextoEnMayusculas.put(listaTemporal)
+            
 
 def writeText(colaTextoEnMayusculas, output):
     with open(output, 'w') as rFile:
 
         while(True):
-            linea_en_mayusculas = colaTextoEnMayusculas.get()
+            listaEntrada = colaTextoEnMayusculas.get()
 
-            if(linea_en_mayusculas == None):
+            if(listaEntrada == None):
                 break
             else:
-                rFile.write(linea_en_mayusculas + '\n')
+                for linea_en_mayusculas in listaEntrada:
+                    rFile.write(linea_en_mayusculas + '\n')
 
 if __name__ == '__main__':
     colaTextoLeido = multiprocessing.Queue()
@@ -54,19 +83,25 @@ if __name__ == '__main__':
     input = 'texto_entrada.txt'
     output = 'texto_salida.txt'
 
-    procesos = [None]*4
+    procesos = [None]*3
 
-    procesos[0] = multiprocessing.Process(target=readFile, args=(input, colaTextoLeido))
-    procesos[1] = multiprocessing.Process(target=cleanLines, args=(colaTextoLeido, colaTextoLimpiado))
-    procesos[2] = multiprocessing.Process(target=toUpper, args=(colaTextoLimpiado, colaTextoEnMayusculas))
-    procesos[3] = multiprocessing.Process(target=writeText, args=(colaTextoEnMayusculas, output))
+    procesos[0] = multiprocessing.Process(target=cleanLines, args=(colaTextoLeido, colaTextoLimpiado))
+    procesos[1] = multiprocessing.Process(target=toUpper, args=(colaTextoLimpiado, colaTextoEnMayusculas))
+    procesos[2] = multiprocessing.Process(target=writeText, args=(colaTextoEnMayusculas, output))
 
     time1 = time.time()
-    for i in range(4):
+    
+
+    for i in range(3):
         procesos[i].start()
 
-    for j in range(4):
+    readFile(input, colaTextoLeido)
+    
+
+    for j in range(3):
         procesos[j].join()
+
+    
 
     time2 = time.time()
 
