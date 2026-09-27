@@ -1,15 +1,6 @@
 import multiprocessing
 import time
 
-
-CHUNK_SIZE = 50000
-
-def verification(lista, chunk_size):
-    if(len(lista) >= chunk_size):
-        return True
-    else:
-        return False
-
 def readFile(input ,colaTextoLeido):
     try:
         with open(input, 'r') as file:
@@ -18,7 +9,7 @@ def readFile(input ,colaTextoLeido):
 
             for linea in file:
                 listaTemporal.append(linea)
-                if verification(listaTemporal, CHUNK_SIZE):
+                if len(listaTemporal) >= CHUNK_SIZE:
                     colaTextoLeido.put(listaTemporal)
                     listaTemporal = list()
                     
@@ -30,44 +21,27 @@ def readFile(input ,colaTextoLeido):
         print("Error: No se encontró el archivo texto_entrada")
         colaTextoLeido.put(None)
 
-def cleanLines(colaTextoLeido, colaTextoLimpiado):
+def cleanAndToUpperLines(colaTextoLeido, colaTextoTransformado):
     
     while(True):
         listaTemporal = list()
 
         listaEntrada = colaTextoLeido.get()
         if(listaEntrada == None):
-            colaTextoLimpiado.put(None)
+            colaTextoTransformado.put(None)
             break
         else:
             for linea_leida in listaEntrada:
-                listaTemporal.append(linea_leida.strip())
-            colaTextoLimpiado.put(listaTemporal)
+                listaTemporal.append(linea_leida.strip().upper())
+            colaTextoTransformado.put(listaTemporal)
             
         
 
-
-def toUpper(colaTextoLimpiado, colaTextoEnMayusculas):
-    
-    
-    while(True):
-        listaTemporal = list()
-        listaEntrada = colaTextoLimpiado.get()
-
-        if(listaEntrada == None):
-            colaTextoEnMayusculas.put(None)
-            break
-        else:
-            for linea_limpia in listaEntrada:
-                listaTemporal.append(linea_limpia.upper())
-            colaTextoEnMayusculas.put(listaTemporal)
-            
-
-def writeText(colaTextoEnMayusculas, output):
+def writeText(colaTextoTransformado, output):
     with open(output, 'w') as rFile:
 
         while(True):
-            listaEntrada = colaTextoEnMayusculas.get()
+            listaEntrada = colaTextoTransformado.get()
 
             if(listaEntrada == None):
                 break
@@ -76,29 +50,43 @@ def writeText(colaTextoEnMayusculas, output):
                     rFile.write(linea_en_mayusculas + '\n')
 
 if __name__ == '__main__':
+
+    CHUNK_SIZE = 200_000
+
+    LINEAS = [
+        "     Morir de amor, que no es morir solo y en desamor. Morir de amor, que no es morir solo y en desamor.     ",
+        "    y no Tener un Nombre a Quien Decirle.  y no Tener un Nombre a Quien Decirle.            ",
+        "     Al viento.    Al viento.     Al viento.    Al v  iento.   Al viento.    Al viento.       "
+    ]
+    
+    NUM_LINEAS = 10_000_000
+
+    with open("texto_entrada.txt", "w", encoding="utf-8") as archivo:
+        for i in range(NUM_LINEAS):
+            archivo.write(LINEAS[i % len(LINEAS)] + "\n")
+
+
     colaTextoLeido = multiprocessing.Queue()
-    colaTextoLimpiado = multiprocessing.Queue()
-    colaTextoEnMayusculas = multiprocessing.Queue()
+    colaTextoTransformado = multiprocessing.Queue()
 
     input = 'texto_entrada.txt'
     output = 'texto_salida.txt'
 
-    procesos = [None]*3
+    procesos = [None]*2
 
-    procesos[0] = multiprocessing.Process(target=cleanLines, args=(colaTextoLeido, colaTextoLimpiado))
-    procesos[1] = multiprocessing.Process(target=toUpper, args=(colaTextoLimpiado, colaTextoEnMayusculas))
-    procesos[2] = multiprocessing.Process(target=writeText, args=(colaTextoEnMayusculas, output))
+    procesos[0] = multiprocessing.Process(target=cleanAndToUpperLines, args=(colaTextoLeido, colaTextoTransformado))
+    procesos[1] = multiprocessing.Process(target=writeText, args=(colaTextoTransformado, output))
 
     time1 = time.time()
     
 
-    for i in range(3):
+    for i in range(2):
         procesos[i].start()
 
     readFile(input, colaTextoLeido)
     
 
-    for j in range(3):
+    for j in range(2):
         procesos[j].join()
 
     
