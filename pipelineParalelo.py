@@ -1,6 +1,14 @@
 import multiprocessing
 import time
 
+def cleanLine(line):
+    cleaned_line = line.strip()
+    return cleaned_line
+
+def toUpperLine(line):
+    upper_line = line.upper()
+    return upper_line
+
 def readFile(input ,colaTextoLeido):
     try:
         with open(input, 'r') as file:
@@ -32,10 +40,13 @@ def cleanAndToUpperLines(colaTextoLeido, colaTextoTransformado):
             break
         else:
             for linea_leida in listaEntrada:
-                listaTemporal.append(linea_leida.strip().upper())
+
+                lineaLimpiada = cleanLine(linea_leida)
+                lineaMayusculasLimpiada = toUpperLine(lineaLimpiada)
+
+                listaTemporal.append(lineaMayusculasLimpiada)
             colaTextoTransformado.put(listaTemporal)
             
-        
 
 def writeText(colaTextoTransformado, output):
     with open(output, 'w') as rFile:
