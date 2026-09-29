@@ -17,8 +17,8 @@ if __name__ == '__main__':
     
     LINEAS = [
             "     Morir de amor, que no es morir solo y en desamor. Morir de amor, que no es morir solo y en desamor.     ",
-            "    y no Tener un Nombre a Quien Decirle.  y no Tener un Nombre a Quien Decirle.            ",
-            "     Al viento.    Al viento.     Al viento.    Al viento.   Al viento.    Al viento.       "
+            "    y no tener un nombre a quien decirle.  y no tener un nombre a quien decirle.            ",
+            "     AL VIENTO.    AL VIENTO.     AL VIENTO.    AL V  IENTO.   AL VIENTO.    AL VIENTO.       "
         ]
 
     NUM_LINEAS = 1_000_000
